@@ -44,8 +44,13 @@ public class ExpenseTracker {
             System.out.println("11. Set Monthly Budget");
             System.out.print("Choose an option: ");
 
-            int choice = sc.nextInt();
-            sc.nextLine(); // consume newline
+            int choice;
+            try {
+                choice = Integer.parseInt(sc.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number.");
+                continue;
+            }
 
             if (choice == 1) {
                 addExpense(expenses, sc);
@@ -81,7 +86,7 @@ public class ExpenseTracker {
             else if (choice == 10) {
                 monthlyReport(expenses, sc, monthlyBudget);
             } 
-            else if ( choice == 11) {
+            else if (choice == 11) {
                 System.out.println("Enter monthly budget.");
                 monthlyBudget = sc.nextDouble();
                 sc.nextLine();
@@ -217,6 +222,10 @@ public class ExpenseTracker {
             return;
         }
 
+        System.out.println("Enter year (YYYY): ");
+        int year = sc.nextInt();
+        sc.nextLine();
+
         System.out.println("Enter month(1-12): ");
         int month = sc.nextInt();
         sc.nextLine();
@@ -229,10 +238,11 @@ public class ExpenseTracker {
         double total = 0;
         boolean found = false;
 
-        System.out.println("\n--- Expenses for Month" + month + "---");
+        System.out.println("\n--- Expenses for " + Month.of(month).name().substring(0,1)
+            + Month.of(month).name().substring(1).toLowerCase() + " " + year + " ---");
 
         for(Expense e : expenses) {
-            if(e.date.getMonthValue() == month) {
+            if(e.date.getMonthValue() == month && e.date.getYear() == year) {
                 System.out.println(
                     e.date + " | " + e.category + " - Rs. " + e.amount
                 );
@@ -322,6 +332,12 @@ public class ExpenseTracker {
         System.out.println("Enter new amount. ");
         double newAmount = sc.nextDouble();
         sc.nextLine();
+
+        if(newAmount <= 0) {
+            System.out.println("Invalid amount. Edit cancelled.");
+            return;
+        }
+
         e.category = newCategory;
         e.amount = newAmount;
 
@@ -433,11 +449,9 @@ public class ExpenseTracker {
     }
 
     static void saveBudget(double budget) {
-        try {
-            FileWriter writer = new FileWriter("budget.txt");
+        try (FileWriter writer = new FileWriter("budget.txt")) {
             writer.write(String.valueOf(budget));
-            writer.close();
-        } catch (IOException e ) {
+        } catch (IOException e) {
             System.out.println("Error saving budget.");
         }
     }
