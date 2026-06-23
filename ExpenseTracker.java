@@ -263,7 +263,7 @@ public class ExpenseTracker {
     }
 
     static void saveToDatabase(ArrayList<Expense> expenses) {
-        String url = "jdbc:mysql://localhost:3306/expense_db"; // Your local DB
+        String url = "jdbc:mysql://localhost:3306/expense_db"; //Local DB
         String user = "root";
         String password = System.getenv("DB_PASSWORD"); 
         String query = "INSERT INTO expenses (expense_date, category, amount) VALUES (?, ?, ?)";
@@ -495,7 +495,6 @@ public class ExpenseTracker {
     try (Connection conn = DriverManager.getConnection(url, user, password);
          Statement stmt = conn.createStatement()) {
             
-            // Wipe old budget and insert the new one
             stmt.executeUpdate("TRUNCATE TABLE budget_config");
             stmt.executeUpdate("INSERT INTO budget_config (monthly_budget) VALUES (" + budget + ")");
         } catch (SQLException e) {
