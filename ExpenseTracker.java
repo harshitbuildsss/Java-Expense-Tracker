@@ -279,7 +279,7 @@ public class ExpenseTracker {
                 pstmt.setString(1, e.date.toString()); // Sets first '?'
                 pstmt.setString(2, e.category);        // Sets second '?'
                 pstmt.setDouble(3, e.amount);          // Sets third '?'
-                pstmt.addBatch();                      // Batching optimizes the execution
+                pstmt.addBatch();                      // Batching
             }
             pstmt.executeBatch();
         } catch (SQLException e) {
