@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -79,5 +80,51 @@ class ExpenseServiceTest {
         assertEquals(48500.0, dto.getBalance());
         assertEquals(3, dto.getTotalTransactions());
         assertEquals(750.0, dto.getAverageExpense());
+    }
+
+    // ---------- Regression tests for the null-date crash ----------
+
+    @Test
+    void getTransactions_sortByDate_doesNotThrowWhenARowHasNoDate() {
+        Expense noDate = new Expense("Other", 100.0, null, null, TransactionType.EXPENSE);
+        Expense withDate = new Expense("Food", 200.0, LocalDate.of(2026, 9, 1), null, TransactionType.EXPENSE);
+
+        when(expenseRepository.findAll()).thenReturn(Arrays.asList(noDate, withDate));
+
+        // Used to throw NullPointerException - this is the exact bug from the crash log.
+        List<Expense> result = expenseService.getTransactions(null, null, null, null, null, "date", "desc");
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void dashboardSummary_skipsRowWithNoDateInMonthlyBreakdownButStillCountsItsTotal() {
+        Expense noDate = new Expense("Other", 100.0, null, null, TransactionType.EXPENSE);
+        Expense withDate = new Expense("Food", 200.0, LocalDate.of(2026, 9, 1), null, TransactionType.EXPENSE);
+
+        when(expenseRepository.findAll()).thenReturn(Arrays.asList(noDate, withDate));
+
+        // Used to throw NullPointerException on e.getDate().format(...).
+        DashboardSummaryDto dto = expenseService.getDashboardSummary();
+
+        assertEquals(300.0, dto.getTotalExpense()); // both rows still counted in totals
+        assertEquals(1, dto.getMonthlyBreakdown().size()); // only the dated row appears on the chart
+    }
+
+    @Test
+    void updateExpense_defaultsToTodayWhenDateOmittedInsteadOfNullingIt() {
+        Expense existing = new Expense("Food", 100.0, LocalDate.of(2026, 1, 1));
+        existing.setId(1);
+        when(expenseRepository.findById(1)).thenReturn(java.util.Optional.of(existing));
+        when(expenseRepository.save(any(Expense.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Simulates a PUT body that omits "date" entirely.
+        Expense updateRequest = new Expense();
+        updateRequest.setCategory("Food");
+        updateRequest.setAmount(150.0);
+
+        Expense result = expenseService.updateExpense(1, updateRequest);
+
+        assertEquals(LocalDate.now(), result.getDate());
     }
 }

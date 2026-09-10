@@ -48,7 +48,7 @@ public class ExpenseService {
     // ---------- Read ----------
 
     public List<Expense> getAllExpenses() {
-        return expenseRepository.findAll();
+        return expenseRepository.findAllByOrderByExpenseDateDesc();
     }
 
     public Expense getExpenseById(int id) {
@@ -68,7 +68,9 @@ public class ExpenseService {
 
         existing.setCategory(updatedDetails.getCategory());
         existing.setAmount(updatedDetails.getAmount());
-        existing.setDate(updatedDetails.getDate());
+        // Same rule as create: a client that omits date doesn't get to null it
+        // out - default to today rather than corrupting the row.
+        existing.setDate(updatedDetails.getDate() != null ? updatedDetails.getDate() : LocalDate.now());
         existing.setDescription(updatedDetails.getDescription());
         // Only change the type if the client actually sent one, so a PUT that
         // just fixes the amount doesn't silently flip an income back to expense.
@@ -132,17 +134,27 @@ public class ExpenseService {
                 .filter(e -> keyword == null
                         || e.getCategory().toLowerCase().contains(keyword.toLowerCase())
                         || (e.getDescription() != null && e.getDescription().toLowerCase().contains(keyword.toLowerCase())))
-                .filter(e -> startDate == null || !e.getDate().isBefore(startDate))
-                .filter(e -> endDate == null || !e.getDate().isAfter(endDate))
+                .filter(e -> startDate == null || (e.getDate() != null && !e.getDate().isBefore(startDate)))
+                .filter(e -> endDate == null || (e.getDate() != null && !e.getDate().isAfter(endDate)))
                 .collect(Collectors.toList());
     }
 
     private void sortInPlace(List<Expense> list, String by, String order) {
-        Comparator<Expense> comparator = "date".equalsIgnoreCase(by)
-                ? Comparator.comparing(Expense::getDate)
-                : Comparator.comparingDouble(Expense::getAmount);
-        if ("desc".equalsIgnoreCase(order)) {
-            comparator = comparator.reversed();
+        boolean desc = "desc".equalsIgnoreCase(order);
+        Comparator<Expense> comparator;
+
+        if ("date".equalsIgnoreCase(by)) {
+            // A row with no date (shouldn't happen, but the old data bug that
+            // caused it is fixed in updateExpense below) always sorts last,
+            // in both directions - reversing a plain nullsLast comparator
+            // would otherwise flip it to the front on "desc".
+            Comparator<LocalDate> direction = desc ? Comparator.reverseOrder() : Comparator.naturalOrder();
+            comparator = Comparator.comparing(Expense::getDate, Comparator.nullsLast(direction));
+        } else {
+            comparator = Comparator.comparingDouble(Expense::getAmount);
+            if (desc) {
+                comparator = comparator.reversed();
+            }
         }
         list.sort(comparator);
     }
@@ -181,8 +193,12 @@ public class ExpenseService {
                 .collect(Collectors.groupingBy(Expense::getCategory, Collectors.summingDouble(Expense::getAmount)));
 
         // Group by calendar month for the income-vs-expense trend chart.
+        // A row with no date can't be placed on the chart, so it's skipped here
+        // rather than crashing the whole dashboard - it's still counted in
+        // every total above, just not in the monthly breakdown.
         Map<String, double[]> monthlyTotals = new TreeMap<>();
         for (Expense e : all) {
+            if (e.getDate() == null) continue;
             String key = e.getDate().format(MONTH_FORMAT);
             double[] bucket = monthlyTotals.computeIfAbsent(key, k -> new double[2]);
             if (e.getType() == TransactionType.INCOME) {

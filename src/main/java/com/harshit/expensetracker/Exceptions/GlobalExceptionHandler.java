@@ -40,4 +40,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
         return new ResponseEntity<>("Invalid value for parameter '" + e.getName() + "'.", HttpStatus.BAD_REQUEST);
     }
+
+    // Safety net: anything not covered above (a genuine bug) still gets a clean
+    // JSON-free response instead of Spring's default stack-trace error page.
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleUnexpected(Exception e) {
+        return new ResponseEntity<>("Something went wrong. Please try again.", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }

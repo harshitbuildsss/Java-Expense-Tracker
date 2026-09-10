@@ -10,6 +10,10 @@ public interface ExpenseRepository extends JpaRepository<Expense, Integer> {
     
     // SELECT * FROM expenses WHERE LOWER(category) 
     List<Expense> findByCategoryIgnoreCase(String category);
-    //SELECT * FROM expnses ORDER BY amount ASC
+
+    // SELECT * FROM expenses ORDER BY amount ASC
     List<Expense> findAllByOrderByAmountAsc();
+
+    // SELECT * FROM expenses ORDER BY expense_date DESC
+    List<Expense> findAllByOrderByExpenseDateDesc();
 }
