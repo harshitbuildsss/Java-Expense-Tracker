@@ -319,9 +319,6 @@ The service tests use Mockito to mock `ExpenseRepository`, allowing business log
 * **Maven Project Management**
 * **Git/GitHub Workflow**
 
-## Project Context
-
-Developed as a **3-member college project**, with responsibility for building and integrating the application's backend and frontend functionality.
 
 ## Author
 
