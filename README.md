@@ -1,118 +1,330 @@
-# Smart Expense Tracker REST API
+# Smart Expense Tracker
 
-A backend expense management application built using **Spring Boot**, **Spring Data JPA**, **Hibernate**, and **MySQL**. The project follows a layered architecture and exposes RESTful APIs for performing CRUD operations and expense analysis.
+A full-stack expense management application built with **Spring Boot REST API** and a **React + TypeScript frontend**. The application supports income and expense tracking, transaction filtering/search/sorting, and a dashboard with financial summaries and charts.
 
+## Features
 
+### Transaction Management
 
-## Features:
+* Add expense transactions
+* Add income transactions
+* View transactions
+* View a transaction by ID
+* Update transactions
+* Delete transactions
+* Automatically default a missing transaction date to the current date
 
-- Add a new expense or income entry
-- View all transactions, with optional filters (type, category, keyword, date range) and sorting
-- View a transaction by ID
-- Update existing transactions
-- Delete transactions
-- Search transactions by category, type, or keyword
-- Category-wise expense summary
-- Full dashboard summary: total income, total expense, balance, net savings, total transactions, average expense, category breakdown, monthly income/expense breakdown
-- Sort transactions by amount or date
-- Automatic persistence using MySQL
+### Search, Filter & Sort
 
+* Filter by transaction type
+* Filter by category
+* Search by category or description keyword
+* Filter by date range
+* Sort by amount or date in ascending/descending order
 
+### Dashboard & Reports
+
+* Total income
+* Total expenses
+* Current balance
+* Net savings
+* Total transaction count
+* Average expense
+* Category-wise expense breakdown
+* Monthly income/expense breakdown
+* Category and trend charts in the React frontend
+
+### Validation & Error Handling
+
+* Rejects non-positive transaction amounts
+* Validates incoming request data
+* Handles missing transaction records
+* Global exception handling for API errors
+* Frontend error boundary and user-facing error/toast states
+
+### Testing
+
+* Service-layer unit tests using **JUnit 5 and Mockito**
+* Tests cover transaction type handling, amount validation, missing records, dashboard calculations, and update behavior
+* Tests run without requiring a real MySQL connection by mocking the repository layer
 
 ## Tech Stack
 
-- Java 17
-- Spring Boot
-- Spring Data JPA
-- Hibernate
-- MySQL
-- Maven
-- REST APIs
-- Postman
+### Backend
 
+* **Java 17**
+* **Spring Boot**
+* **Spring Web MVC**
+* **Spring Data JPA**
+* **Hibernate**
+* **MySQL**
+* **Maven**
+* **Jakarta Validation**
 
+### Frontend
 
-## Project Structure
+* **React 18**
+* **TypeScript**
+* **Vite**
+* **Tailwind CSS**
+* **Axios**
+* **React Router**
+* **Recharts**
+* **Lucide React**
 
-```
-src/main/java
-│
-├── controller
-├── model
-├── repository
-├── service
-└── ExpensetrackerApplication
-```
+### Testing
 
-
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/expenses` | Add a new expense (type is always forced to EXPENSE) |
-| POST | `/api/expenses/income` | Add a new income entry (type is always forced to INCOME) |
-| GET | `/api/expenses` | Get all transactions. Optional query params: `type`, `category`, `keyword`, `startDate`, `endDate`, `sortBy`, `order` |
-| GET | `/api/expenses/{id}` | Retrieve a transaction by ID |
-| PUT | `/api/expenses/{id}` | Update a transaction |
-| DELETE | `/api/expenses/{id}` | Delete a transaction |
-| GET | `/api/expenses/search?category=&type=&keyword=` | Search transactions (all params optional) |
-| GET | `/api/expenses/summary` | Category-wise EXPENSE totals |
-| GET | `/api/expenses/dashboard` | Full dashboard summary for cards + charts |
-| GET | `/api/expenses/sorted?by=amount\|date&order=asc\|desc` | Transactions sorted by amount or date |
-
-
+* **JUnit 5**
+* **Mockito**
+* **Spring Boot Test**
 
 ## Architecture
 
-```
-Postman
-    │
-HTTP Request
-    │
-@RestController
-    │
-Service Layer
-    │
-Repository (Spring Data JPA)
-    │
-Hibernate
-    │
-MySQL
+The application follows a layered backend architecture:
+
+```text
+React + TypeScript Frontend
+          │
+          │ HTTP / REST
+          ▼
+     REST Controller
+          │
+          ▼
+      Service Layer
+          │
+          ▼
+ Spring Data JPA Repository
+          │
+          ▼
+       Hibernate
+          │
+          ▼
+        MySQL
 ```
 
+### Backend Structure
 
+```text
+src/main/java/com/harshit/expensetracker/
+│
+├── config/
+│   └── CorsConfig.java
+│
+├── controller/
+│   └── ExpenseController.java
+│
+├── dto/
+│   ├── DashboardSummaryDto.java
+│   └── MonthlySummaryDto.java
+│
+├── Exceptions/
+│   └── GlobalExceptionHandler.java
+│
+├── model/
+│   ├── Expense.java
+│   └── TransactionType.java
+│
+├── repository/
+│   └── ExpenseRepository.java
+│
+├── service/
+│   └── ExpenseService.java
+│
+└── ExpensetrackerApplication.java
+```
+
+### Frontend Structure
+
+```text
+frontend/src/
+│
+├── api/
+│   ├── client.ts
+│   └── expenseApi.ts
+│
+├── components/
+│   ├── CategoryChart.tsx
+│   ├── ConfirmDialog.tsx
+│   ├── ErrorBoundary.tsx
+│   ├── Header.tsx
+│   ├── Sidebar.tsx
+│   ├── StatCard.tsx
+│   ├── TransactionForm.tsx
+│   ├── TransactionTable.tsx
+│   └── TrendChart.tsx
+│
+├── hooks/
+│   ├── useDashboard.ts
+│   └── useTransactions.ts
+│
+├── pages/
+│   ├── Dashboard.tsx
+│   ├── Transactions.tsx
+│   ├── AddTransaction.tsx
+│   ├── Categories.tsx
+│   ├── Search.tsx
+│   ├── Reports.tsx
+│   └── Settings.tsx
+│
+├── types/
+├── utils/
+├── App.tsx
+└── main.tsx
+```
+
+## API Endpoints
+
+**Base URL:**
+
+```text
+http://localhost:8080
+```
+
+| Method   | Endpoint                  | Description                                          |
+| -------- | ------------------------- | ---------------------------------------------------- |
+| `POST`   | `/api/expenses`           | Create an expense                                    |
+| `POST`   | `/api/expenses/income`    | Create an income entry                               |
+| `GET`    | `/api/expenses`           | Get transactions with optional filters/sorting       |
+| `GET`    | `/api/expenses/{id}`      | Get a transaction by ID                              |
+| `PUT`    | `/api/expenses/{id}`      | Update a transaction                                 |
+| `DELETE` | `/api/expenses/{id}`      | Delete a transaction                                 |
+| `GET`    | `/api/expenses/search`    | Search/filter by category, type, or keyword          |
+| `GET`    | `/api/expenses/sorted`    | Sort transactions by amount or date                  |
+| `GET`    | `/api/expenses/summary`   | Get category-wise expense totals                     |
+| `GET`    | `/api/expenses/dashboard` | Get dashboard totals and monthly/category breakdowns |
+
+### Main Transaction Query Parameters
+
+```text
+type
+category
+keyword
+startDate
+endDate
+sortBy
+order
+```
+
+Example:
+
+```text
+/api/expenses?type=EXPENSE&category=Food&sortBy=amount&order=desc
+```
+
+## Database Setup
+
+Create a MySQL database:
+
+```sql
+CREATE DATABASE expense_db;
+```
+
+Update:
+
+```text
+src/main/resources/application.properties
+```
+
+with your local MySQL credentials.
+
+The project uses:
+
+```properties
+spring.jpa.hibernate.ddl-auto=update
+```
+
+so Hibernate can update the database schema from the entity model during development.
+
+> **Do not commit real database passwords or other secrets to the repository.**
+
+## Running the Backend
+
+### 1. Start MySQL
+
+Make sure MySQL is running and the `expense_db` database exists.
+
+### 2. Configure Database Credentials
+
+Update:
+
+```text
+src/main/resources/application.properties
+```
+
+with your local MySQL username and password.
+
+### 3. Run the Spring Boot Application
+
+On Windows:
+
+```bash
+mvnw.cmd spring-boot:run
+```
+
+Or, if Maven is installed:
+
+```bash
+mvn spring-boot:run
+```
+
+The backend runs on:
+
+```text
+http://localhost:8080
+```
+
+## Running the Frontend
+
+Open a second terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The Vite development server runs on:
+
+```text
+http://localhost:5173
+```
+
+The frontend communicates with the Spring Boot backend through the REST API.
+
+## Running Tests
+
+From the project root:
+
+```bash
+mvnw.cmd test
+```
+
+The service tests use Mockito to mock `ExpenseRepository`, allowing business logic to be tested without connecting to MySQL.
 
 ## Skills Demonstrated
 
-- Object-Oriented Programming (OOP)
-- Layered Architecture
-- REST API Development
-- CRUD Operations
-- Spring Boot
-- Spring Data JPA
-- Hibernate ORM
-- MySQL Integration
-- Repository Pattern
-- Dependency Injection
-- Exception Handling
-- Maven Project Management
+* **Java & Object-Oriented Programming**
+* **Spring Boot REST API Development**
+* **Layered Architecture**
+* **Dependency Injection**
+* **Spring Data JPA & Hibernate**
+* **MySQL Persistence**
+* **REST API Integration with React**
+* **TypeScript & React**
+* **Client-Side Routing & API Calls**
+* **Data Filtering, Searching, Sorting & Aggregation**
+* **Dashboard Data Processing & Visualization**
+* **Input Validation & Exception Handling**
+* **Unit Testing with JUnit & Mockito**
+* **Maven Project Management**
+* **Git/GitHub Workflow**
 
+## Project Context
 
-## Future Improvements
-
-- Bean Validation (`@Valid`)
-- Global Exception Handling
-- DTO Layer
-- Swagger/OpenAPI Documentation
-- Pagination & Sorting
-- Budget Alerts
-- Authentication & Authorization
-
----
+Developed as a **3-member college project**, with responsibility for building and integrating the application's backend and frontend functionality.
 
 ## Author
 
 **Harshit Kumar Singh**
 
-Backend Developer | Java | Spring Boot | MySQL | REST APIs | DSA
+Java | Spring Boot | React | MySQL | REST APIs | DSA
