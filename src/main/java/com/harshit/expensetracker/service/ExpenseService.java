@@ -48,7 +48,7 @@ public class ExpenseService {
     // ---------- Read ----------
 
     public List<Expense> getAllExpenses() {
-        return expenseRepository.findAllByOrderByExpenseDateDesc();
+        return expenseRepository.findAllByOrderByDateDesc();
     }
 
     public Expense getExpenseById(int id) {

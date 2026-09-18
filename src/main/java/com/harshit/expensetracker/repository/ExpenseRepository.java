@@ -15,5 +15,5 @@ public interface ExpenseRepository extends JpaRepository<Expense, Integer> {
     List<Expense> findAllByOrderByAmountAsc();
 
     // SELECT * FROM expenses ORDER BY expense_date DESC
-    List<Expense> findAllByOrderByExpenseDateDesc();
+    List<Expense> findAllByOrderByDateDesc();
 }
